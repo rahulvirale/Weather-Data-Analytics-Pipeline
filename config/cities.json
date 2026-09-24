@@ -1,0 +1,29 @@
+{
+  "cities": [
+    {
+      "city": "Mumbai",
+      "latitude": 19.0760,
+      "longitude": 72.8777
+    },
+    {
+      "city": "Kolhapur",
+      "latitude": 16.7050,
+      "longitude": 74.2433
+    },
+    {
+      "city": "Pune",
+      "latitude": 18.5204,
+      "longitude": 73.8567
+    },
+    {
+      "city": "Sangli",
+      "latitude": 16.8524,
+      "longitude": 74.5815
+    },
+    {
+      "city": "Jalgaon",
+      "latitude": 21.0077,
+      "longitude": 75.5626
+    }
+  ]
+}
