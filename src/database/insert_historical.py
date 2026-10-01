@@ -23,6 +23,16 @@ PROCESSED_FILE = (
 # ---------------------------------------------------------
 # Load transformed historical weather data
 # ---------------------------------------------------------
+def delete_old_records():
+    delete_query = """
+        DELETE FROM historical_weather
+        WHERE weather_time < DATE_SUB(CURDATE(), INTERVAL 29 DAY)
+    """
+
+    with engine.begin() as connection:
+        result = connection.execute(text(delete_query))
+
+    print(f"{result.rowcount} old historical records deleted.")
 
 def load_weather_data():
 
@@ -113,31 +123,20 @@ def insert_weather_data(records):
 # ---------------------------------------------------------
 
 def main():
-
-    print(
-        "Loading transformed historical weather data..."
-    )
-
+    print("Loading transformed historical weather data...")
     records = load_weather_data()
 
-    print(
-        f"Found {len(records)} records."
-    )
+    print(f"Found {len(records)} records.")
 
     if not records:
-
-        print(
-            "No historical weather records found."
-        )
-
+        print("No historical weather records found.")
         return
 
-    print(
-        "Inserting historical records into MySQL..."
-    )
+    print("Deleting old historical records...")
+    delete_old_records()
 
+    print("Inserting historical records into MySQL...")
     insert_weather_data(records)
-
 
 # ---------------------------------------------------------
 # Run program

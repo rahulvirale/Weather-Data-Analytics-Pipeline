@@ -34,7 +34,6 @@ def load_weather_data():
 # --------------------------------------------------
 
 def insert_weather_data(records):
-
     insert_query = """
         INSERT INTO current_weather (
             city,
@@ -78,14 +77,21 @@ def insert_weather_data(records):
 
     with engine.begin() as connection:
 
+        print("Deleting previous current weather records...")
+
+        connection.execute(
+            text("DELETE FROM current_weather")
+        )
+
+        print("Inserting latest current weather records...")
+
         for record in records:
             connection.execute(
-                text(insert_query),record
+                text(insert_query),
+                record
             )
 
-    print(f"{len(records)} weather records inserted successfully.")
-
-
+    print(f"{len(records)} current weather records inserted.")
 # --------------------------------------------------
 # Main
 # --------------------------------------------------

@@ -9,4 +9,3 @@ ON historical_weather (city, weather_time);
 
 SHOW INDEX FROM historical_weather;
 
-select count(*) from historical_weather;
