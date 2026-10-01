@@ -1,84 +1,49 @@
 import json
 from pathlib import Path
+from datetime import date, timedelta
 
 from api.historical_weather import get_historical_weather
 
 
-# --------------------------------------------------
 # Project directories
-# --------------------------------------------------
-
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 CITIES_FILE = BASE_DIR / "config" / "cities.json"
 OUTPUT_DIR = BASE_DIR / "data" / "raw" / "historical"
 
 
-# --------------------------------------------------
-# Historical date range
-# --------------------------------------------------
+# Automatically calculate latest 30 days
+END_DATE = date.today()
+START_DATE = END_DATE - timedelta(days=29)
 
-START_DATE = "2025-01-01"
-END_DATE = "2025-01-07"
-
-
-# --------------------------------------------------
-# Load cities
-# --------------------------------------------------
 
 def load_cities():
-    """
-    Load city information from config/cities.json.
-    """
-
     with open(CITIES_FILE, "r", encoding="utf-8") as file:
         data = json.load(file)
 
     return data["cities"]
 
 
-# --------------------------------------------------
-# Save raw historical weather
-# --------------------------------------------------
-
 def save_raw_weather(city_name, weather_data):
-    """
-    Save the raw Open-Meteo historical response
-    for a city as JSON.
-    """
-
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    output_file = OUTPUT_DIR / f"{city_name.lower()}.json"
+    file_path = OUTPUT_DIR / f"{city_name}.json"
 
-    with open(output_file, "w", encoding="utf-8") as file:
+    with open(file_path, "w", encoding="utf-8") as file:
         json.dump(weather_data, file, indent=4)
 
-    print(f"Saved: {output_file}")
+    print(f"Raw historical data saved for {city_name}")
 
-
-# --------------------------------------------------
-# Main
-# --------------------------------------------------
 
 def main():
-    """
-    Get historical weather for all configured cities.
-    """
 
-    print("Starting historical weather collection...")
-    print()
-
-    print(f"Date range: {START_DATE} to {END_DATE}")
-    print()
+    print("Starting historical weather data collection...")
+    print(f"Start date: {START_DATE}")
+    print(f"End date: {END_DATE}")
 
     cities = load_cities()
 
-    print(f"Found {len(cities)} cities.")
-    print()
-
-    successful = 0
-    failed = 0
+    successful_cities = []
+    failed_cities = []
 
     for city in cities:
 
@@ -86,51 +51,44 @@ def main():
         latitude = city["latitude"]
         longitude = city["longitude"]
 
-        print(f"Getting historical weather for {city_name}...")
+        print(f"\nFetching historical weather for {city_name}...")
 
-        weather_data = get_historical_weather(
-            latitude=latitude,
-            longitude=longitude,
-            start_date=START_DATE,
-            end_date=END_DATE
-        )
+        try:
 
-        if weather_data:
-
-            # Add city information to the raw response
-            weather_data["city"] = city_name
-
-            save_raw_weather(
-                city_name,
-                weather_data
+            weather_data = get_historical_weather(
+                latitude,
+                longitude,
+                START_DATE.isoformat(),
+                END_DATE.isoformat()
             )
 
-            successful += 1
+            weather_data["city"] = city_name
 
-            print(f"✓ {city_name} completed")
-            print()
+            save_raw_weather(city_name, weather_data)
 
-        else:
+            successful_cities.append(city_name)
 
-            failed += 1
+        except Exception as error:
 
-            print(f"✗ Failed to get historical weather for {city_name}")
-            print()
+            print(f"Failed to fetch data for {city_name}: {error}")
 
-    print("--------------------------------")
-    print("Historical weather collection completed")
-    print("--------------------------------")
-    print(f"Successful: {successful}")
-    print(f"Failed:     {failed}")
-    print(f"Total:      {len(cities)}")
-    print()
-    print("Raw data location:")
-    print(OUTPUT_DIR)
+            failed_cities.append(city_name)
 
+    print("\nHistorical weather collection completed.")
 
-# --------------------------------------------------
-# Run program
-# --------------------------------------------------
+    print(f"Successful cities: {len(successful_cities)}")
+    print(f"Failed cities: {len(failed_cities)}")
+
+    if successful_cities:
+        print("\nSuccessful:")
+        for city in successful_cities:
+            print(f" - {city}")
+
+    if failed_cities:
+        print("\nFailed:")
+        for city in failed_cities:
+            print(f" - {city}")
+
 
 if __name__ == "__main__":
     main()

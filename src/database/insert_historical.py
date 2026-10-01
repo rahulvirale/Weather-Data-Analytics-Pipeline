@@ -5,9 +5,9 @@ from connection import engine
 from sqlalchemy import text
 
 
-# ============================================================
+# ---------------------------------------------------------
 # Project directories
-# ============================================================
+# ---------------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -20,9 +20,9 @@ PROCESSED_FILE = (
 )
 
 
-# ============================================================
+# ---------------------------------------------------------
 # Load transformed historical weather data
-# ============================================================
+# ---------------------------------------------------------
 
 def load_weather_data():
 
@@ -35,14 +35,14 @@ def load_weather_data():
         return json.load(file)
 
 
-# ============================================================
+# ---------------------------------------------------------
 # Insert historical weather data
-# ============================================================
+# ---------------------------------------------------------
 
 def insert_weather_data(records):
 
     insert_query = """
-        INSERT INTO historical_weather (
+        INSERT IGNORE INTO historical_weather (
             city,
             latitude,
             longitude,
@@ -82,24 +82,35 @@ def insert_weather_data(records):
         )
     """
 
+    inserted_count = 0
+    skipped_count = 0
+
     with engine.begin() as connection:
 
         for record in records:
 
-            connection.execute(
+            result = connection.execute(
                 text(insert_query),
                 record
             )
 
+            if result.rowcount == 1:
+                inserted_count += 1
+            else:
+                skipped_count += 1
+
     print(
-        f"{len(records)} historical weather records "
-        f"inserted successfully."
+        f"{inserted_count} new historical records inserted."
+    )
+
+    print(
+        f"{skipped_count} duplicate records skipped."
     )
 
 
-# ============================================================
+# ---------------------------------------------------------
 # Main
-# ============================================================
+# ---------------------------------------------------------
 
 def main():
 
@@ -128,9 +139,9 @@ def main():
     insert_weather_data(records)
 
 
-# ============================================================
-# Run directly
-# ============================================================
+# ---------------------------------------------------------
+# Run program
+# ---------------------------------------------------------
 
 if __name__ == "__main__":
     main()
